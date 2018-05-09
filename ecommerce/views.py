@@ -1,14 +1,20 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login,get_user_model
 
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
-from .forms import ContactForm, Login_Form
+from .forms import ContactForm, Login_Form, Register_Form
 
 
 def home_page(request):
     context = {'title': 'from views.py home_page',
-               'content': 'Welcome to the homepage'}
+               'content': 'Welcome to the homepage',
+               'premium_content':"content PREMIUM"
+               }
+
+    if request.user.is_authenticated():
+        context['premium_content'] = 'content PREMIUM!!'
+
     return render(request, 'home_page.html', context)
 
 
@@ -59,7 +65,7 @@ def login_page(request):
         # Redirect to a success page.
 
         #context['form'] = Login_Form()
-            return redirect('/login')
+            return redirect('/')
         else:
 
         # Return an 'invalid login' error message.
@@ -67,9 +73,17 @@ def login_page(request):
             print ('error')
     return render(request, 'auth/login.html', context)
 
-
+User = get_user_model()
 def register_page(request):
-    form = Login_Form(request.POST or None)
+    form = Register_Form(request.POST or None)
+    context = {
+    'form': form
+    }
     if form.is_valid():
         print (form.cleaned_data)
-    return render(request, 'auth/register.html', {})
+        username = form.cleaned_data.get('username')
+        email = form.cleaned_data.get('email')
+        password = form.cleaned_data.get('password')
+        new_user = User.objects.create_user(username,email,password)
+        print(new_user)
+    return render(request, 'auth/register.html', context)
